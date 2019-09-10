@@ -21,7 +21,7 @@ typedef struct Queue{
   int size;
 }q;
 
-
+_Bool QisEmpty(q *queue);
 job *new_node();
 void enqueue(q *queue, int timestamp, int job_ID);
 job  *dequeue(q *queue);

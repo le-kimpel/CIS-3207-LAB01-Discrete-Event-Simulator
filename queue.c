@@ -19,7 +19,7 @@ typedef struct Queue{
   int size;
 }q;
 
-
+_Bool QisEmpty(q *queue);
 job *new_node();
 void enqueue(q *queue, int timestamp, int job_ID);
 job  *dequeue(q *queue);
@@ -57,7 +57,7 @@ void enqueue(q *queue, int timestamp, int job_ID){
     queue->tail = temp;
 
   }
-  
+  queue->size++;
 }                                            
 
 job *dequeue(q *queue){
@@ -71,11 +71,13 @@ job *dequeue(q *queue){
     queue->size--;
 
     return temp;
-
+  }
   }
 
-  
-
-
-
+  _Bool QisEmpty(q *queue){
+    if (queue->size == 0){
+      return 1;
+    }else{
+      return 0;
+    }
 }

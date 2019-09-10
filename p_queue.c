@@ -5,6 +5,7 @@
 typedef struct eventNode{
 
   char *event_type;
+  int event_num;
   int timestamp;
   int job_ID;
 }event;
@@ -40,10 +41,10 @@ event pop(heap *pq){
   event popped = pq->pq_arr[0];
   
   if (!isEmpty(pq)){
-    
-    popped = pq->pq_arr[pq->size];
+    pq->pq_arr[0] = pq->pq_arr[pq->size-1];
     pq->size--;
     percolate(pq);
+    
   }
 
   return popped;
@@ -73,7 +74,7 @@ void push(heap *pq, event data){
    //percolates up upon insertion at the end of the queue
    event temp;
 
-   for (int i = pq->size-1; i>=0; i--){
+   for (int i = pq->size-1; i>=0; i/=2){
      
      event current = pq->pq_arr[i];
        

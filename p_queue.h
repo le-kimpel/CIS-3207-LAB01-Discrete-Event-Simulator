@@ -7,6 +7,7 @@
 typedef struct eventNode{
 
   char *event_type;
+  int event_num;
   int timestamp;
   int job_ID;
 }event;

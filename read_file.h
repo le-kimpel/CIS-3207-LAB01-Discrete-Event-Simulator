@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-int *read_file();
+float *read_file();
 
 #endif //READ_FILE_H
 

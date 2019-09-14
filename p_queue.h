@@ -27,5 +27,6 @@ void destroy(heap *pq);
 event pop(heap *pq);
 void print_PQ(heap *pq);
 void percolate(heap *pq);
+int sort_pq(heap * pq, int level, int flag);
 
 #endif //P_QUEUE_H

@@ -151,10 +151,6 @@ void handle_event(eq event_queue, float *values, CPU *cpu, disk *disk1, disk *di
    
     //pop the minimum node from the event queue
     event current = pop(event_queue.priority_queue);
-    //printf("%d\n", current.timestamp);
-    //print_PQ(event_queue.priority_queue);
-    //printf("**************\n");
-
     
     global_time = current.timestamp;  
     if (current.event_num == 1){
@@ -187,32 +183,20 @@ void handle_event(eq event_queue, float *values, CPU *cpu, disk *disk1, disk *di
     case 1:
       handle_sim_arrival(event_queue, current, values,cpu, disk1, disk2);
       break;
-      // case 2:
-      //  process_CPU_arrival(event_queue, current, cpu, values, disk1, disk2);
-      // break; //Arrival in CPU
     case 3 :
       process_CPU_finish(event_queue, current, cpu, values, disk1, disk2,
-			 DISK_PROB);
-      break; //Finish in CPU
-      // case 4 :
-      //process_disk1_arrival(event_queue, current, cpu, values, disk1,
-      //disk2);
+			 DISK_PROB); 
       break;
      case 5:
        process_disk1_finish(event_queue, current, cpu, values, disk1,
 			    disk2);
        break;
-       // case 6:
-       // process_disk2_arrival(event_queue, current, cpu, values, disk1,
-       //disk2);
-       // break;
       case 7:
 	process_disk2_finish(event_queue, current, cpu, values, disk1,
 			     disk2);
 	break;
     case 14 :  break; //SIM_END
     }
- 
  }
 }
 
@@ -238,8 +222,11 @@ void process_CPU_finish(eq event_queue, event e, CPU *cpu, float *values, disk *
       
       if (disk1->status == DISK1_IDLE){
 	//send directly to disk1
-	event disk1_to_arrive = {"Arrival in Disk1", JOB_ARRIVAL_DISK1, global_time, e.job_ID};
-        event disk1_to_finish = {"Finish in Disk1", JOB_LEAVES_DISK1, random_gen(values[9],values[8])+global_time, e.job_ID};
+	event disk1_to_arrive = {"Arrival in Disk1", JOB_ARRIVAL_DISK1,
+				 global_time, e.job_ID};
+        event disk1_to_finish = {"Finish in Disk1", JOB_LEAVES_DISK1,
+				 random_gen(values[9],values[8])+global_time,
+				 e.job_ID};
 	push(event_queue.priority_queue, disk1_to_arrive);
 	push(event_queue.priority_queue, disk1_to_finish);
 	disk1->status = DISK1_BUSY;
@@ -247,8 +234,11 @@ void process_CPU_finish(eq event_queue, event e, CPU *cpu, float *values, disk *
       }else if (disk2->status == DISK2_IDLE){
 	//send directly to disk2
 
-	event disk2_to_arrive = {"Arrival in Disk2", JOB_ARRIVAL_DISK2, global_time, e.job_ID};
-	event disk2_to_finish = {"Finish in Disk2", JOB_LEAVES_DISK2, random_gen(values[9],values[8])+global_time, e.job_ID};
+	event disk2_to_arrive = {"Arrival in Disk2", JOB_ARRIVAL_DISK2,
+				 global_time, e.job_ID};
+	event disk2_to_finish = {"Finish in Disk2", JOB_LEAVES_DISK2,
+				 random_gen(values[9],values[8])+global_time,
+				 e.job_ID};
 
 	push(event_queue.priority_queue, disk2_to_arrive);
 	push(event_queue.priority_queue, disk2_to_finish);
@@ -258,18 +248,14 @@ void process_CPU_finish(eq event_queue, event e, CPU *cpu, float *values, disk *
 	//if they are equal, choose at random
       }else{
 	if(compare_disk_queue_size(*disk1, *disk2, e) == JOB_ARRIVAL_DISK1){
-
 	  enqueue(disk1->queue,e.timestamp, e.job_ID);
 
 	}else{
-
 	  enqueue(disk2->queue,e.timestamp,e.job_ID);
-	  
 	}
       }
     }else{
-      
-      printf("JOB LEFT SIMULATION\n");
+      printf("%s%d%s\n", "JOB " , e.job_ID, " LEFT THE SIMULATION");
     }
     
     //dequeue the events waiting in the queue and send them to event handler
@@ -277,8 +263,10 @@ void process_CPU_finish(eq event_queue, event e, CPU *cpu, float *values, disk *
     if (!QisEmpty(cpu->queue)){
       job *task = dequeue(cpu->queue);
 
-      event to_arrive = {"Arrive in CPU", JOB_ARRIVAL_CPU, global_time, task->job_ID};
-      event to_finish = {"Finish in CPU", JOB_LEAVES_CPU, random_gen(values[7],values[6])+global_time, task->job_ID};
+      event to_arrive = {"Arrive in CPU", JOB_ARRIVAL_CPU, global_time,
+			 task->job_ID};
+      event to_finish = {"Finish in CPU", JOB_LEAVES_CPU,
+			 random_gen(values[7],values[6])+global_time, task->job_ID};
 
       push(event_queue.priority_queue, to_arrive);
       push(event_queue.priority_queue, to_finish);
@@ -305,7 +293,7 @@ const int compare_disk_queue_size(disk disk1, disk disk2, event e){
     }else{
       return JOB_ARRIVAL_DISK2;
     }
-}
+  }
 }
 
 void process_disk1_finish(eq event_queue, event e, CPU *cpu, float *values, disk *disk1, disk *disk2){
@@ -323,8 +311,11 @@ void process_disk1_finish(eq event_queue, event e, CPU *cpu, float *values, disk
 
       job *task = dequeue(disk1->queue);
 
-      event to_arrive_d1 = {"Disk1 read arrival", JOB_ARRIVAL_DISK1, global_time, task->job_ID};
-      event to_finish_d1 = {"Disk1 read finished", JOB_LEAVES_DISK1, random_gen(values[9],values[8])+global_time, task->job_ID};
+      event to_arrive_d1 = {"Disk1 read arrival", JOB_ARRIVAL_DISK1, global_time,
+			    task->job_ID};
+      event to_finish_d1 = {"Disk1 read finished", JOB_LEAVES_DISK1,
+			    random_gen(values[9],values[8])+global_time,
+			    task->job_ID};
 
       push(event_queue.priority_queue, to_arrive_d1);
       push(event_queue.priority_queue, to_finish_d1);
@@ -344,8 +335,11 @@ void process_disk2_finish(eq event_queue, event e, CPU *cpu, float *values, disk
 
       job *task = dequeue(disk2->queue);
 
-      event to_arrive_d2 = {"Disk2 read arrival", JOB_ARRIVAL_DISK2, global_time, task->job_ID};
-      event to_finish_d2 = {"Finished at disk 2", JOB_LEAVES_DISK2, random_gen(values[11],values[10])+global_time, task->job_ID};
+      event to_arrive_d2 = {"Disk2 read arrival", JOB_ARRIVAL_DISK2, global_time,
+			    task->job_ID};
+      event to_finish_d2 = {"Finished at disk 2", JOB_LEAVES_DISK2,
+			    random_gen(values[11],values[10])+global_time,
+			    task->job_ID};
 
       push(event_queue.priority_queue, to_arrive_d2);
       push(event_queue.priority_queue, to_finish_d2);

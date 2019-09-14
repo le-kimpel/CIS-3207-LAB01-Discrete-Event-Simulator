@@ -276,8 +276,11 @@ void process_CPU_finish(eq event_queue, event e, CPU *cpu, float *values, disk *
     //to be immediately processed in CPU
     if (!QisEmpty(cpu->queue)){
       job *task = dequeue(cpu->queue);
- 
+
+      event to_arrive = {"Arrive in CPU", JOB_ARRIVAL_CPU, global_time, task->job_ID};
       event to_finish = {"Finish in CPU", JOB_LEAVES_CPU, random_gen(values[7],values[6])+global_time, task->job_ID};
+
+      push(event_queue.priority_queue, to_arrive);
       push(event_queue.priority_queue, to_finish);
       
       cpu->status = CPU_BUSY;
@@ -319,9 +322,11 @@ void process_disk1_finish(eq event_queue, event e, CPU *cpu, float *values, disk
     if (!QisEmpty(disk1->queue)){
 
       job *task = dequeue(disk1->queue);
-     
+
+      event to_arrive_d1 = {"Disk1 read arrival", JOB_ARRIVAL_DISK1, global_time, task->job_ID};
       event to_finish_d1 = {"Disk1 read finished", JOB_LEAVES_DISK1, random_gen(values[9],values[8])+global_time, task->job_ID};
 
+      push(event_queue.priority_queue, to_arrive_d1);
       push(event_queue.priority_queue, to_finish_d1);
       
       disk1->status = DISK1_BUSY;
@@ -339,11 +344,12 @@ void process_disk2_finish(eq event_queue, event e, CPU *cpu, float *values, disk
 
       job *task = dequeue(disk2->queue);
 
-
+      event to_arrive_d2 = {"Disk2 read arrival", JOB_ARRIVAL_DISK2, global_time, task->job_ID};
       event to_finish_d2 = {"Finished at disk 2", JOB_LEAVES_DISK2, random_gen(values[11],values[10])+global_time, task->job_ID};
 
+      push(event_queue.priority_queue, to_arrive_d2);
       push(event_queue.priority_queue, to_finish_d2);
-
+	
       disk2->status = DISK2_BUSY;
     }
     

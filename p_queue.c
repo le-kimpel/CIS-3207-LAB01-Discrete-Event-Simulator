@@ -1,7 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-
-
 typedef struct eventNode{
 
   char *event_type; //string to dictate the type in debugging
@@ -9,7 +7,6 @@ typedef struct eventNode{
   int timestamp; //timestamp of event
   int job_ID; //job ID
 }event;
-
 typedef struct heap{
   int size; //keep track of whether pq is full or empty
   event *pq_arr; //pointers to event
@@ -61,13 +58,13 @@ void push(heap *pq, event data){
   pq->pq_arr[pq->size] = data;
 
   // grabs final node index
-  int cur_index = pq->size;
+  int cur_index = pq->size + 1;
 
   // switch for swapping nodes
   int swap_switch = 0;
 
   // sorts the values
-  while(cur_index > 0 && swap_switch == 0){
+  while(cur_index > 1 && swap_switch == 0){
     swap_switch = sort_pq(pq, cur_index, swap_switch);
     cur_index/=2;
   }
@@ -77,8 +74,9 @@ void push(heap *pq, event data){
 
 int sort_pq(heap * pq, int level, int swap_switch){
  
-  int new_level = level/2;
-
+  int new_level = level/2 - 1;
+  level -= 1;
+  
   // swaps nodes if lower node is less than higher node
   if(pq->pq_arr[level].timestamp < pq->pq_arr[new_level].timestamp){
     event temp = pq->pq_arr[level];

@@ -89,7 +89,7 @@ void main(){
   push(event_queue.priority_queue, SIM_END);
 
   int i = values[1];
-  //generate ALL arrival events 
+  //generate ALL arrival events by prepopulating the queue 
   while(i < values[2]){
 
     event start_sim = {"Arrival_SIM", JOB_ARRIVAL_SIM, i, count++};
@@ -99,7 +99,6 @@ void main(){
     push(event_queue.priority_queue, start_sim);
     
   }
-
   //print_PQ(event_queue.priority_queue);
   
   //start the simulation

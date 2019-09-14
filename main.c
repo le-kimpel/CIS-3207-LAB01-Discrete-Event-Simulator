@@ -100,8 +100,8 @@ void main(){
     
   }
 
-  print_PQ(event_queue.priority_queue);
-  exit(0);
+  //print_PQ(event_queue.priority_queue);
+  
   //start the simulation
  
   //srand(time(0));
@@ -123,7 +123,7 @@ void process_CPU_enter(eq event_queue, event e, float *values, CPU *cpu,
 		       disk *disk1, disk *disk2){
 
   if (cpu->status == CPU_IDLE){
-    puts("CPU IDLE BOIS");    
+        
     event cpu_arrive = {"Arrival in CPU", JOB_ARRIVAL_CPU, e.timestamp, e.job_ID};
     event cpu_finish = {"Finish in CPU", JOB_LEAVES_CPU,
 			random_gen(values[7],values[6])+global_time, e.job_ID};
@@ -132,7 +132,7 @@ void process_CPU_enter(eq event_queue, event e, float *values, CPU *cpu,
     cpu->status = CPU_BUSY;
     
   }else if (cpu->status == CPU_BUSY){
-    puts("please wait your turn!");
+    
     enqueue(cpu->queue,e.timestamp, e.job_ID);
   }else{
     puts("ERROR: event could not be enqueued");
@@ -152,12 +152,13 @@ void handle_event(eq event_queue, float *values, CPU *cpu, disk *disk1, disk *di
    
     //pop the minimum node from the event queue
     event current = pop(event_queue.priority_queue);
+    //printf("%d\n", current.timestamp);
     //print_PQ(event_queue.priority_queue);
     //printf("**************\n");
 
     
     global_time = current.timestamp;  
-      if (current.event_num == 1){
+    if (current.event_num == 1){
       printf("%s%d%s%d\n", "job", current.job_ID,
 	     " arrived in simulation at time ", current.timestamp); 
     } else if (current.event_num == 2){
@@ -187,25 +188,25 @@ void handle_event(eq event_queue, float *values, CPU *cpu, disk *disk1, disk *di
     case 1:
       handle_sim_arrival(event_queue, current, values,cpu, disk1, disk2);
       break;
-    case 2:
-      process_CPU_arrival(event_queue, current, cpu, values, disk1, disk2);
-      break; //Arrival in CPU
+      // case 2:
+      //  process_CPU_arrival(event_queue, current, cpu, values, disk1, disk2);
+      // break; //Arrival in CPU
     case 3 :
       process_CPU_finish(event_queue, current, cpu, values, disk1, disk2,
 			 DISK_PROB);
       break; //Finish in CPU
-    case 4 :
-      process_disk1_arrival(event_queue, current, cpu, values, disk1,
-			    disk2);
+      // case 4 :
+      //process_disk1_arrival(event_queue, current, cpu, values, disk1,
+      //disk2);
       break;
      case 5:
        process_disk1_finish(event_queue, current, cpu, values, disk1,
 			    disk2);
        break;
-     case 6:
-       process_disk2_arrival(event_queue, current, cpu, values, disk1,
-			     disk2);
-       break;
+       // case 6:
+       // process_disk2_arrival(event_queue, current, cpu, values, disk1,
+       //disk2);
+       // break;
       case 7:
 	process_disk2_finish(event_queue, current, cpu, values, disk1,
 			     disk2);
@@ -222,12 +223,6 @@ its finishing time and enqueued in the event queue.
 This means that, when these event is popped, it will return to this method,
 and a message will be generated.*/
 
-void process_CPU_arrival(eq event_queue, event e, CPU *cpu, float *values, disk *disk1, disk *disk2){
-  
-  puts("how was your day?");
- 
-}
-
 
 /*when an event is finished in the cpu, there is a chance 
   it may exit  the simulation.*/
@@ -242,17 +237,22 @@ void process_CPU_finish(eq event_queue, event e, CPU *cpu, float *values, disk *
     if (DISK_PROB == 0) {
       //job continues in simulation
       
-      if (disk1->status == IDLE){
+      if (disk1->status == DISK1_IDLE){
 	//send directly to disk1
-	event disk1_to_arrive = {"Arrival in Disk1", JOB_ARRIVAL_DISK1, random_gen(values[9],values[8])+global_time, e.job_ID};
+	event disk1_to_arrive = {"Arrival in Disk1", JOB_ARRIVAL_DISK1, global_time, e.job_ID};
+        event disk1_to_finish = {"Finish in Disk1", JOB_LEAVES_DISK1, random_gen(values[9],values[8])+global_time, e.job_ID};
 	push(event_queue.priority_queue, disk1_to_arrive);
+	push(event_queue.priority_queue, disk1_to_finish);
 	disk1->status = DISK1_BUSY;
 
-      }else if (disk2->status == IDLE){
+      }else if (disk2->status == DISK2_IDLE){
 	//send directly to disk2
 
-	event disk2_to_arrive = {"Arrival in Disk2", JOB_ARRIVAL_DISK2, random_gen(values[9],values[8])+global_time, e.job_ID};
+	event disk2_to_arrive = {"Arrival in Disk2", JOB_ARRIVAL_DISK2, global_time, e.job_ID};
+	event disk2_to_finish = {"Finish in Disk2", JOB_LEAVES_DISK2, random_gen(values[9],values[8])+global_time, e.job_ID};
+
 	push(event_queue.priority_queue, disk2_to_arrive);
+	push(event_queue.priority_queue, disk2_to_finish);
 	disk2->status = DISK2_BUSY;
       
     	 //compare FIFO queue sizes of Disk 1 and Disk 2
@@ -260,11 +260,11 @@ void process_CPU_finish(eq event_queue, event e, CPU *cpu, float *values, disk *
       }else{
 	if(compare_disk_queue_size(*disk1, *disk2, e) == JOB_ARRIVAL_DISK1){
 
-	  enqueue(disk1->queue(e.timestamp, e.job_ID));
+	  enqueue(disk1->queue,e.timestamp, e.job_ID);
 
 	}else{
 
-	  enqueue(disk2->queue(e.timestamp,e.job_ID));
+	  enqueue(disk2->queue,e.timestamp,e.job_ID);
 	  
 	}
       }
@@ -306,30 +306,15 @@ const int compare_disk_queue_size(disk disk1, disk disk2, event e){
 }
 }
 
-void process_disk1_arrival(eq event_queue, event e, CPU *cpu, float *values, disk *disk1, disk *disk2){
-
-  if (disk1->status == DISK1_BUSY){
-    enqueue(disk1->queue, e.timestamp, e.job_ID);
-  }
-
-     
-  event to_finish = {"Disk1 read finished", JOB_LEAVES_DISK1, global_time+random_gen(values[9],values[8]), e.job_ID};
-  push(event_queue.priority_queue, to_finish);
-  disk1->status = DISK1_BUSY;
- 
-
-}
-
 void process_disk1_finish(eq event_queue, event e, CPU *cpu, float *values, disk *disk1, disk *disk2){
 
-  if (JOB_LEAVES_DISK1){
-
+  //set disk1 status to idle, as event has finished in disk1
     disk1->status = DISK1_IDLE;
-    
-  }
-   
-      event to_cpu = {"Arrival in CPU", JOB_ARRIVAL_CPU, e.timestamp, e.job_ID};
-    push(event_queue.priority_queue, to_cpu);
+
+
+    //checks CPU if it's empty. If it is, sends arrival event straight into CPU
+    process_CPU_enter(event_queue, e, values, cpu,  disk1, disk2);
+
 
 
     if (!QisEmpty(disk1->queue)){
@@ -343,36 +328,17 @@ void process_disk1_finish(eq event_queue, event e, CPU *cpu, float *values, disk
       disk1->status = DISK1_BUSY;
     }
   }
-void process_disk2_arrival(eq event_queue, event e, CPU *cpu, float *values, disk *disk1, disk *disk2){
-
-
-  if (disk2->status == DISK2_BUSY){
-    enqueue(disk2->queue, e.timestamp, e.job_ID);
-  }
-  
-  if (disk2->status == DISK2_IDLE){
-  event to_finish = {"Finished at Disk2", JOB_LEAVES_DISK2, global_time+random_gen(values[11],values[10]), e.job_ID};
-  push(event_queue.priority_queue, to_finish);
-  disk2->status = DISK2_BUSY;
-
-  }
-
-}
 
 void process_disk2_finish(eq event_queue, event e, CPU *cpu, float *values, disk *disk1, disk *disk2){
 
-    if (JOB_LEAVES_DISK2){
 
-      disk2->status = DISK2_IDLE;
+     disk2->status = DISK2_IDLE;
       
-    event back_to_CPU = {"Arrival in CPU", JOB_ARRIVAL_CPU, e.timestamp, e.job_ID};
-
-    push(event_queue.priority_queue, back_to_CPU);
-			 
+     process_CPU_enter(event_queue, e, values, cpu, disk1, disk2);
     
     if (!QisEmpty(disk2->queue)){
 
-      job *task = dequeue(disk1->queue);
+      job *task = dequeue(disk2->queue);
 
 
       event to_finish_d2 = {"Finished at disk 2", JOB_LEAVES_DISK2, random_gen(values[11],values[10])+global_time, task->job_ID};
@@ -380,8 +346,6 @@ void process_disk2_finish(eq event_queue, event e, CPU *cpu, float *values, disk
       push(event_queue.priority_queue, to_finish_d2);
 
       disk2->status = DISK2_BUSY;
-    }  
-    
-
     }
+    
 }

@@ -63,14 +63,32 @@ void generate_event(eq event_queue, float *values, CPU *cpu, disk *disk1,
 		    disk *disk2);
 int count = 0;
 int global_time = 0;
-
+FILE *fp;
 
 void main(){
   eq event_queue;
   disk disk1, disk2;
   CPU cpu;
   float *values = read_file();
+  fp = fopen("log.txt", "w");
 
+  fprintf(fp, "%s\n", "CONFIG FILE VALUES:");
+  fprintf(fp, "%s\n", "-------------------------------------------");
+  fprintf(fp, "%s%lf\n", "SEED: ", values[0]);
+  fprintf(fp, "%s%lf\n", "INIT TIME: ", values[1]);
+  fprintf(fp, "%s%lf\n", "FIN TIME: ", values[2]);
+  fprintf(fp, "%s%lf\n", "ARRIVE MIN: ", values[3]);
+  fprintf(fp, "%s%lf\n", "ARRIVE MAX: ", values[4]);
+  fprintf(fp, "%s%lf\n", "QUIT PROBABILITY: ", values[5]);
+  fprintf(fp, "%s%lf\n", "CPU MIN: ", values[6]);
+  fprintf(fp, "%s%lf\n", "CPU MAX: ", values[7]);
+  fprintf(fp, "%s%lf\n", "DISK1 MIN: ", values[8]);
+  fprintf(fp, "%s%lf\n", "DISK1 MAX: ", values[9]);
+  fprintf(fp, "%s%lf\n", "DISK2 MIN: ", values[10]);
+  fprintf(fp, "%s%lf\n", "DISK2 MAX: ", values[11]);
+  fprintf(fp, "%s\n", "-------------------------------------------");
+ 
+     
   //initialize structures and allocate memory
   event_queue.priority_queue = initialize();
   cpu.queue = initialize_queue();
@@ -103,7 +121,7 @@ void main(){
   
   //start the simulation
  
-  //srand(time(0));
+  srand(values[0]);
   handle_event(event_queue, values, &cpu, &disk1, &disk2);
   
 }
@@ -140,42 +158,40 @@ void process_CPU_enter(eq event_queue, event e, float *values, CPU *cpu,
 
 //handles event nodes of different types
 void handle_event(eq event_queue, float *values, CPU *cpu, disk *disk1, disk *disk2){
-
+  
   while(!isEmpty(event_queue.priority_queue)){
 
     //generate the probability of each event exiting the loop   
     int DISK_PROB = prob_select(values[5]);
-
-    //    printf("**************\n");
-    //print_PQ(event_queue.priority_queue);
    
     //pop the minimum node from the event queue
     event current = pop(event_queue.priority_queue);
     
     global_time = current.timestamp;  
     if (current.event_num == 1){
-      printf("%s%d%s%d\n", "job", current.job_ID,
+      fprintf(fp,"%s%d%s%d\n", "job", current.job_ID,
 	     " arrived in simulation at time ", current.timestamp); 
     } else if (current.event_num == 2){
-      printf("%s%d%s%d\n", "job", current.job_ID,
+      fprintf(fp, "%s%d%s%d\n", "job", current.job_ID,
 	     " arrived in CPU at time ", current.timestamp);
     }else if (current.event_num == 3){
-      printf("%s%d%s%d\n", "job", current.job_ID,
+      fprintf(fp, "%s%d%s%d\n", "job", current.job_ID,
 	     " left CPU at time ", current.timestamp);
     }else if (current.event_num == 4){
-      printf("%s%d%s%d\n", "job", current.job_ID,
+      fprintf(fp, "%s%d%s%d\n", "job", current.job_ID,
 	     " arrived in Disk1 at time ", current.timestamp);
     }else if (current.event_num == 5){
-      printf("%s%d%s%d\n", "job", current.job_ID,
+      fprintf(fp, "%s%d%s%d\n", "job", current.job_ID,
 	     " left Disk1 at time ", current.timestamp);
     }else if (current.event_num == 6){
-      printf("%s%d%s%d\n", "job",current.job_ID,
+      fprintf(fp, "%s%d%s%d\n", "job",current.job_ID,
 	     " arrived in Disk2 at time ", current.timestamp);
     }else if(current.event_num == 7){
-      printf("%s%d%s%d\n", "job",current.job_ID,
+      fprintf(fp,"%s%d%s%d\n", "job",current.job_ID,
 	     " left Disk2 at time ", current.timestamp);
     }else if(current.event_num == SIMULATION_END){
-      printf("Simulation ended\n");
+      fprintf(fp, "%s\n","Simulation ended");
+      fclose(fp);
       exit(0);
     }
    
@@ -255,7 +271,7 @@ void process_CPU_finish(eq event_queue, event e, CPU *cpu, float *values, disk *
 	}
       }
     }else{
-      printf("%s%d%s\n", "JOB " , e.job_ID, " LEFT THE SIMULATION");
+      fprintf(fp,"%s%d%s\n", "JOB " , e.job_ID, " LEFT THE SIMULATION");
     }
     
     //dequeue the events waiting in the queue and send them to event handler

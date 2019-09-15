@@ -61,15 +61,42 @@ const int  compare_disk_queue_size(disk disk1, disk disk2, event e);
 
 void generate_event(eq event_queue, float *values, CPU *cpu, disk *disk1,
 		    disk *disk2);
+
+//variables necessary for running the program
 int count = 0;
 int global_time = 0;
 FILE *fp;
+
+//VARIABLES FOR STATS:
+
+//variables for bullet 1 statistics
+float cpu_num_elems = 0;
+float cpu_num_adds = 0;
+
+float disk1_num_elems = 0;
+float disk1_num_adds = 0;
+
+float disk2_num_elems = 0;
+float disk2_num_adds = 0;
+
+//maximum count for keeping track of FIFO statistics
+int MAX_cpu = 0;
+int MAX_disk1 = 0;
+int MAX_disk2 = 0;
+//num_elems: size of each FIFO queue
+//num_adds: keeps track of every time num_elems is incremented
+
+//count for throughput
+float completed_jobs_cpu = 0;
+float completed_jobs_disk1 = 0;
+float completed_jobs_disk2 = 0;
 
 void main(){
   eq event_queue;
   disk disk1, disk2;
   CPU cpu;
   float *values = read_file();
+  
   fp = fopen("log.txt", "w");
 
   fprintf(fp, "%s\n", "CONFIG FILE VALUES:");
@@ -147,8 +174,18 @@ void process_CPU_enter(eq event_queue, event e, float *values, CPU *cpu,
     push(event_queue.priority_queue, cpu_arrive);
     push(event_queue.priority_queue, cpu_finish);
     cpu->status = CPU_BUSY;
+
+
     
   }else if (cpu->status == CPU_BUSY){
+
+    cpu_num_elems+=cpu->queue->size;
+    cpu_num_adds+=1;
+
+    //check for maximum cpu queue size
+    if (cpu->queue->size > MAX_cpu){
+      MAX_cpu = cpu->queue->size;
+    }
     
     enqueue(cpu->queue,e.timestamp, e.job_ID);
   }else{
@@ -177,20 +214,48 @@ void handle_event(eq event_queue, float *values, CPU *cpu, disk *disk1, disk *di
     }else if (current.event_num == 3){
       fprintf(fp, "%s%d%s%d\n", "job", current.job_ID,
 	     " left CPU at time ", current.timestamp);
+      //increment for throughput statistic
+      completed_jobs_cpu++;
     }else if (current.event_num == 4){
       fprintf(fp, "%s%d%s%d\n", "job", current.job_ID,
 	     " arrived in Disk1 at time ", current.timestamp);
     }else if (current.event_num == 5){
       fprintf(fp, "%s%d%s%d\n", "job", current.job_ID,
 	     " left Disk1 at time ", current.timestamp);
+      //increment for throughput statistic
+      completed_jobs_disk1++;
     }else if (current.event_num == 6){
       fprintf(fp, "%s%d%s%d\n", "job",current.job_ID,
 	     " arrived in Disk2 at time ", current.timestamp);
     }else if(current.event_num == 7){
       fprintf(fp,"%s%d%s%d\n", "job",current.job_ID,
-	     " left Disk2 at time ", current.timestamp);
+	      " left Disk2 at time ", current.timestamp);
+      //increment for throughput statistic
+      completed_jobs_disk2++;
     }else if(current.event_num == SIMULATION_END){
       fprintf(fp, "%s\n","Simulation ended");
+
+      //area for printing statistics to log.txt
+      fprintf(fp, "%s\n", "");
+      fprintf(fp, "%s\n", "-------------------------------------");
+      fprintf(fp, "%s\n", "FINISHING STATISTICS: ");
+      fprintf(fp, "%s\n", "-------------------------------------");
+      fprintf(fp, "%s%lf\n", "Average CPU FIFO queue size: ",
+	       cpu_num_elems/cpu_num_adds);
+      fprintf(fp, "%s%d\n", "Maximum CPU FIFO queue size: ", MAX_cpu);
+      fprintf(fp, "%s%lf\n", "Average Disk1 FIFO queue size: ",
+	      disk1_num_elems/disk1_num_adds);
+      fprintf(fp, "%s%d\n", "Maximum Disk1 FIFO queue size: ", MAX_disk1);
+      fprintf(fp, "%s%lf\n", "Average Disk2 FIFO queue size: ",
+	      disk2_num_elems/disk2_num_adds);
+      fprintf(fp, "%s%d\n", "Maximum Disk2 FIFO queue size: ", MAX_disk2);
+      fprintf(fp, "%s%lf\n", "Throughput CPU: ",
+	      completed_jobs_cpu/(values[2]-values[1]));
+      fprintf(fp, "%s%lf\n", "Throughput Disk1: ",
+	      completed_jobs_disk1/(values[2]-values[1]));
+      fprintf(fp, "%s%lf\n", "Throughput Disk2: ",
+	      completed_jobs_disk2/(values[2]-values[1]));
+
       fclose(fp);
       exit(0);
     }
@@ -266,8 +331,24 @@ void process_CPU_finish(eq event_queue, event e, CPU *cpu, float *values, disk *
 	if(compare_disk_queue_size(*disk1, *disk2, e) == JOB_ARRIVAL_DISK1){
 	  enqueue(disk1->queue,e.timestamp, e.job_ID);
 
+	  //check for maximum disk queue size
+	  if (disk1->queue->size > MAX_disk1){
+	    MAX_disk1 = disk1->queue->size;
+	  }
+   
+	  disk1_num_elems += disk1->queue->size;
+	  disk1_num_adds+=1;
+	  
 	}else{
 	  enqueue(disk2->queue,e.timestamp,e.job_ID);
+
+	  //check for maximum disk queue size
+	  if (disk2->queue->size > MAX_disk2){
+	    MAX_disk2 = disk2->queue->size;
+	  }
+    	  
+	  disk2_num_elems += disk2->queue->size;
+	  disk2_num_adds +=1;
 	}
       }
     }else{
@@ -279,6 +360,9 @@ void process_CPU_finish(eq event_queue, event e, CPU *cpu, float *values, disk *
     if (!QisEmpty(cpu->queue)){
       job *task = dequeue(cpu->queue);
 
+      cpu_num_elems += cpu->queue->size;
+      cpu_num_adds += 1;
+      
       event to_arrive = {"Arrive in CPU", JOB_ARRIVAL_CPU, global_time,
 			 task->job_ID};
       event to_finish = {"Finish in CPU", JOB_LEAVES_CPU,
@@ -321,12 +405,13 @@ void process_disk1_finish(eq event_queue, event e, CPU *cpu, float *values, disk
     //checks CPU if it's empty. If it is, sends arrival event straight into CPU
     process_CPU_enter(event_queue, e, values, cpu,  disk1, disk2);
 
-
-
     if (!QisEmpty(disk1->queue)){
 
       job *task = dequeue(disk1->queue);
 
+      disk1_num_elems += disk1->queue->size;
+      disk1_num_adds += 1;
+      
       event to_arrive_d1 = {"Disk1 read arrival", JOB_ARRIVAL_DISK1, global_time,
 			    task->job_ID};
       event to_finish_d1 = {"Disk1 read finished", JOB_LEAVES_DISK1,
@@ -351,6 +436,9 @@ void process_disk2_finish(eq event_queue, event e, CPU *cpu, float *values, disk
 
       job *task = dequeue(disk2->queue);
 
+      disk2_num_elems += disk2->queue->size;
+      disk2_num_adds += 1;
+      
       event to_arrive_d2 = {"Disk2 read arrival", JOB_ARRIVAL_DISK2, global_time,
 			    task->job_ID};
       event to_finish_d2 = {"Finished at disk 2", JOB_LEAVES_DISK2,

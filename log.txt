@@ -103080,3 +103080,6 @@ Utilization Disk2: 0.999860
 Average reponse time CPU: 1.780189
 Average reponse time Disk1: 29447.947266
 Average reponse time Disk2: 20848.826172
+Maximum response time CPU: 7
+Maximum response time Disk1: 58983
+Maximum response time Disk2: 41774

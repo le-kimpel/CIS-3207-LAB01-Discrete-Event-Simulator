@@ -117,6 +117,10 @@ int num_jobs_cpu = 0;
 int num_jobs_disk1 = 0;
 int num_jobs_disk2 = 0;
 
+int MAX_cpu_time = 0;
+int MAX_disk1_time = 0;
+int MAX_disk2_time = 0;
+
 void main(){
   eq event_queue;
   disk disk1, disk2;
@@ -203,6 +207,9 @@ void process_CPU_enter(eq event_queue, event e, float *values, CPU *cpu,
     sum_cpu_time += cpu_finish.timestamp - cpu_arrive.timestamp;
     num_jobs_cpu++;
     
+    if (cpu_finish.timestamp-cpu_arrive.timestamp > MAX_cpu_time){
+      MAX_cpu_time = cpu_finish.timestamp-cpu_arrive.timestamp;
+    }
     
   }else if (cpu->status == CPU_BUSY){
 
@@ -213,7 +220,6 @@ void process_CPU_enter(eq event_queue, event e, float *values, CPU *cpu,
     if (cpu->queue->size > MAX_cpu){
       MAX_cpu = cpu->queue->size;
     }
-    
     enqueue(cpu->queue, e.timestamp, e.job_ID);
   }else{
     puts("ERROR: event could not be enqueued");
@@ -340,8 +346,9 @@ void handle_event(eq event_queue, float *values, CPU *cpu, disk *disk1, disk *di
 	      sum_disk1_time/num_jobs_disk1);
       fprintf(fp, "%s%lf\n", "Average reponse time Disk2: ",
 	      sum_disk2_time/num_jobs_disk2);
-
-      
+      fprintf(fp, "%s%d\n", "Maximum response time CPU: ", MAX_cpu_time);
+      fprintf(fp, "%s%d\n", "Maximum response time Disk1: ", MAX_disk1_time);
+      fprintf(fp, "%s%d\n", "Maximum response time Disk2: ", MAX_disk2_time);
           
       fclose(fp);
       exit(0);
@@ -355,12 +362,12 @@ void handle_event(eq event_queue, float *values, CPU *cpu, disk *disk1, disk *di
       process_CPU_finish(event_queue, current, cpu, values, disk1, disk2,
 			 DISK_PROB); 
       break;
-     case 5:
+    case 5:
        process_disk1_finish(event_queue, current, cpu, values, disk1,
 			    disk2);
        break;
-      case 7:
-	process_disk2_finish(event_queue, current, cpu, values, disk1,
+    case 7:
+      process_disk2_finish(event_queue, current, cpu, values, disk1,
 			     disk2);
 	break;
     case 14 :  break; //SIM_END
@@ -400,7 +407,12 @@ void process_CPU_finish(eq event_queue, event e, CPU *cpu, float *values, disk *
 	disk1->status = DISK1_BUSY;
 	sum_disk1_time += disk1_to_finish.timestamp - disk1_to_arrive.timestamp;
 	num_jobs_disk1++;
-	
+
+   
+	if (disk1_to_finish.timestamp-disk1_to_arrive.timestamp > MAX_disk1_time){
+	  MAX_disk1_time = disk1_to_finish.timestamp-disk1_to_arrive.timestamp;
+	}
+   	
       }else if (disk2->status == DISK2_IDLE){
 	//send directly to disk2
 
@@ -422,7 +434,10 @@ void process_CPU_finish(eq event_queue, event e, CPU *cpu, float *values, disk *
 	job_arrive_disk2 = disk2_to_arrive.timestamp;
 	job_finish_disk2 = disk2_to_finish.timestamp;
 	
-
+	if (disk2_to_finish.timestamp-disk2_to_arrive.timestamp > MAX_disk2_time){
+	  MAX_disk2_time = disk2_to_finish.timestamp-disk2_to_arrive.timestamp;
+	}
+   
 	
     	 //compare FIFO queue sizes of Disk 1 and Disk 2
 	//if they are equal, choose at random
@@ -473,7 +488,12 @@ void process_CPU_finish(eq event_queue, event e, CPU *cpu, float *values, disk *
       push(event_queue.priority_queue, to_finish);
 
       num_jobs_cpu++;
-      
+
+
+      if (to_finish.timestamp-task->timestamp > MAX_cpu_time){
+	MAX_cpu_time = to_finish.timestamp-task->timestamp;
+      }
+  
       cpu->status = CPU_BUSY;
     }
 }
@@ -527,6 +547,13 @@ void process_disk1_finish(eq event_queue, event e, CPU *cpu, float *values, disk
       sum_disk1_time += to_finish_d1.timestamp - task->timestamp;
 
       num_jobs_disk1++;
+
+  
+      if (to_finish_d1.timestamp-task->timestamp > MAX_disk1_time){
+	MAX_disk1_time = to_finish_d1.timestamp-task->timestamp;
+      }
+  
+
       
       
       disk1->status = DISK1_BUSY;
@@ -557,6 +584,12 @@ void process_disk2_finish(eq event_queue, event e, CPU *cpu, float *values, disk
       sum_disk2_time += d2_time;
 
       num_jobs_disk2++;
+
+
+      if (to_finish_d2.timestamp-task->timestamp > MAX_disk2_time){
+	MAX_disk2_time = to_finish_d2.timestamp-task->timestamp;
+      }
+ 
       
       push(event_queue.priority_queue, to_arrive_d2);
       push(event_queue.priority_queue, to_finish_d2);

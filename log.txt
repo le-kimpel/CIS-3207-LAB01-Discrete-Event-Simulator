@@ -103265,3 +103265,6 @@ Maximum Disk2 FIFO queue size: 4695
 Throughput CPU: 0.281711
 Throughput Disk1: 0.066623
 Throughput Disk2: 0.033237
+Utilization CPU: 0.411086
+Utilization Disk1: 0.999860
+Utilization Disk2: 0.999860

@@ -91,6 +91,23 @@ float completed_jobs_cpu = 0;
 float completed_jobs_disk1 = 0;
 float completed_jobs_disk2 = 0;
 
+//count for utilization time
+//response time = jComplete - jArrive = cbusy
+float job_arrive_cpu = 0;
+float job_finish_cpu = 0;
+float job_arrive_disk1 = 0;
+float job_finish_disk1 = 0;
+float job_arrive_disk2 = 0;
+float job_finish_disk2 = 0;
+
+int cpu_flag = 0;
+int disk1_flag = 0;
+int disk2_flag = 0;
+
+int cpu_arrival_time = 0;
+int disk1_arrival_time = 0;
+int disk2_arrival_time = 0;
+
 void main(){
   eq event_queue;
   disk disk1, disk2;
@@ -174,8 +191,6 @@ void process_CPU_enter(eq event_queue, event e, float *values, CPU *cpu,
     push(event_queue.priority_queue, cpu_arrive);
     push(event_queue.priority_queue, cpu_finish);
     cpu->status = CPU_BUSY;
-
-
     
   }else if (cpu->status == CPU_BUSY){
 
@@ -195,7 +210,6 @@ void process_CPU_enter(eq event_queue, event e, float *values, CPU *cpu,
 
 //handles event nodes of different types
 void handle_event(eq event_queue, float *values, CPU *cpu, disk *disk1, disk *disk2){
-  
   while(!isEmpty(event_queue.priority_queue)){
 
     //generate the probability of each event exiting the loop   
@@ -208,33 +222,78 @@ void handle_event(eq event_queue, float *values, CPU *cpu, disk *disk1, disk *di
     if (current.event_num == 1){
       fprintf(fp,"%s%d%s%d\n", "job", current.job_ID,
 	     " arrived in simulation at time ", current.timestamp); 
-    } else if (current.event_num == 2){
+    }else if (current.event_num == 2){
       fprintf(fp, "%s%d%s%d\n", "job", current.job_ID,
 	     " arrived in CPU at time ", current.timestamp);
+      //increment for utilization statistic
+      job_arrive_cpu+=current.timestamp;
+      cpu_flag = 1;
+      cpu_arrival_time = current.timestamp;
+
+      
     }else if (current.event_num == 3){
       fprintf(fp, "%s%d%s%d\n", "job", current.job_ID,
 	     " left CPU at time ", current.timestamp);
       //increment for throughput statistic
       completed_jobs_cpu++;
+      //increment for utilization statistic
+      job_finish_cpu+=current.timestamp;
+      cpu_flag = 0;
+
     }else if (current.event_num == 4){
       fprintf(fp, "%s%d%s%d\n", "job", current.job_ID,
 	     " arrived in Disk1 at time ", current.timestamp);
+      //increment for utilization statistic
+      job_arrive_disk1+=current.timestamp;
+      disk1_flag = 1;
+      disk1_arrival_time = current.timestamp;
+      
     }else if (current.event_num == 5){
       fprintf(fp, "%s%d%s%d\n", "job", current.job_ID,
 	     " left Disk1 at time ", current.timestamp);
       //increment for throughput statistic
       completed_jobs_disk1++;
+      //increment for utilization statistic
+      job_finish_disk1+=current.timestamp;
+      disk1_flag = 0;
+     
+      
     }else if (current.event_num == 6){
       fprintf(fp, "%s%d%s%d\n", "job",current.job_ID,
 	     " arrived in Disk2 at time ", current.timestamp);
+
+      //increment for utilization statistic
+      job_arrive_disk2+=current.timestamp;
+     
+      disk2_flag = 1;
+      disk2_arrival_time = current.timestamp;
+      
     }else if(current.event_num == 7){
       fprintf(fp,"%s%d%s%d\n", "job",current.job_ID,
 	      " left Disk2 at time ", current.timestamp);
       //increment for throughput statistic
       completed_jobs_disk2++;
+      //increment for utilization statistic
+      job_finish_disk2+=current.timestamp;
+
+     
+      disk2_flag = 0;
+      
     }else if(current.event_num == SIMULATION_END){
       fprintf(fp, "%s\n","Simulation ended");
+      
+      if (cpu_flag == 1){
+	job_arrive_cpu-=cpu_arrival_time;
+      }
+      if (disk1_flag == 1){
+	job_arrive_disk1-=disk1_arrival_time;
+      }
 
+      if (disk2_flag == 1){
+	job_arrive_disk2-=disk2_arrival_time;
+	
+      }
+      
       //area for printing statistics to log.txt
       fprintf(fp, "%s\n", "");
       fprintf(fp, "%s\n", "-------------------------------------");
@@ -255,7 +314,18 @@ void handle_event(eq event_queue, float *values, CPU *cpu, disk *disk1, disk *di
 	      completed_jobs_disk1/(values[2]-values[1]));
       fprintf(fp, "%s%lf\n", "Throughput Disk2: ",
 	      completed_jobs_disk2/(values[2]-values[1]));
+      fprintf(fp, "%s%lf\n", "Utilization CPU: ",
+	      (job_finish_cpu - job_arrive_cpu)/(values[2]-values[1]));
+      fprintf(fp, "%s%lf\n", "Utilization Disk1: ",
+	      (job_finish_disk1 - job_arrive_disk1)/
+	      (values[2]-values[1]));
+      fprintf(fp, "%s%lf\n", "Utilization Disk2: ",
+	      (job_finish_disk2 - job_arrive_disk2)/
+	      (values[2]-values[1]));
 
+      printf("%s%lf\n", "disk2 arrive: ", job_arrive_disk2);
+      printf("%s%lf\n", "disk2 finish: ", job_finish_disk2);
+      
       fclose(fp);
       exit(0);
     }
@@ -312,6 +382,7 @@ void process_CPU_finish(eq event_queue, event e, CPU *cpu, float *values, disk *
 	push(event_queue.priority_queue, disk1_to_finish);
 	disk1->status = DISK1_BUSY;
 
+	
       }else if (disk2->status == DISK2_IDLE){
 	//send directly to disk2
 
@@ -324,7 +395,13 @@ void process_CPU_finish(eq event_queue, event e, CPU *cpu, float *values, disk *
 	push(event_queue.priority_queue, disk2_to_arrive);
 	push(event_queue.priority_queue, disk2_to_finish);
 	disk2->status = DISK2_BUSY;
-      
+
+
+	job_arrive_disk2 = disk2_to_arrive.timestamp;
+	job_finish_disk2 = disk2_to_finish.timestamp;
+   
+
+	
     	 //compare FIFO queue sizes of Disk 1 and Disk 2
 	//if they are equal, choose at random
       }else{

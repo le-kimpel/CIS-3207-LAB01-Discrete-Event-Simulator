@@ -108,6 +108,15 @@ int cpu_arrival_time = 0;
 int disk1_arrival_time = 0;
 int disk2_arrival_time = 0;
 
+//count for response times
+float sum_cpu_time = 0;
+float sum_disk1_time = 0;
+float sum_disk2_time = 0;
+
+int num_jobs_cpu = 0;
+int num_jobs_disk1 = 0;
+int num_jobs_disk2 = 0;
+
 void main(){
   eq event_queue;
   disk disk1, disk2;
@@ -161,9 +170,8 @@ void main(){
     push(event_queue.priority_queue, start_sim);
     
   }
-  //print_PQ(event_queue.priority_queue);
-  
-  //start the simulation
+ 
+   //start the simulation
  
   srand(values[0]);
   handle_event(event_queue, values, &cpu, &disk1, &disk2);
@@ -183,14 +191,18 @@ void handle_sim_arrival(eq event_queue, event e, float *values, CPU *cpu,
 void process_CPU_enter(eq event_queue, event e, float *values, CPU *cpu,
 		       disk *disk1, disk *disk2){
 
+  
   if (cpu->status == CPU_IDLE){
-        
+
     event cpu_arrive = {"Arrival in CPU", JOB_ARRIVAL_CPU, e.timestamp, e.job_ID};
     event cpu_finish = {"Finish in CPU", JOB_LEAVES_CPU,
 			random_gen(values[7],values[6])+global_time, e.job_ID};
     push(event_queue.priority_queue, cpu_arrive);
     push(event_queue.priority_queue, cpu_finish);
     cpu->status = CPU_BUSY;
+    sum_cpu_time += cpu_finish.timestamp - cpu_arrive.timestamp;
+    num_jobs_cpu++;
+    
     
   }else if (cpu->status == CPU_BUSY){
 
@@ -202,7 +214,7 @@ void process_CPU_enter(eq event_queue, event e, float *values, CPU *cpu,
       MAX_cpu = cpu->queue->size;
     }
     
-    enqueue(cpu->queue,e.timestamp, e.job_ID);
+    enqueue(cpu->queue, e.timestamp, e.job_ID);
   }else{
     puts("ERROR: event could not be enqueued");
   }
@@ -322,10 +334,15 @@ void handle_event(eq event_queue, float *values, CPU *cpu, disk *disk1, disk *di
       fprintf(fp, "%s%lf\n", "Utilization Disk2: ",
 	      (job_finish_disk2 - job_arrive_disk2)/
 	      (values[2]-values[1]));
+      fprintf(fp, "%s%lf\n", "Average reponse time CPU: ",
+	      sum_cpu_time/num_jobs_cpu);
+      fprintf(fp, "%s%lf\n", "Average reponse time Disk1: ",
+	      sum_disk1_time/num_jobs_disk1);
+      fprintf(fp, "%s%lf\n", "Average reponse time Disk2: ",
+	      sum_disk2_time/num_jobs_disk2);
 
-      printf("%s%lf\n", "disk2 arrive: ", job_arrive_disk2);
-      printf("%s%lf\n", "disk2 finish: ", job_finish_disk2);
       
+          
       fclose(fp);
       exit(0);
     }
@@ -381,7 +398,8 @@ void process_CPU_finish(eq event_queue, event e, CPU *cpu, float *values, disk *
 	push(event_queue.priority_queue, disk1_to_arrive);
 	push(event_queue.priority_queue, disk1_to_finish);
 	disk1->status = DISK1_BUSY;
-
+	sum_disk1_time += disk1_to_finish.timestamp - disk1_to_arrive.timestamp;
+	num_jobs_disk1++;
 	
       }else if (disk2->status == DISK2_IDLE){
 	//send directly to disk2
@@ -389,24 +407,28 @@ void process_CPU_finish(eq event_queue, event e, CPU *cpu, float *values, disk *
 	event disk2_to_arrive = {"Arrival in Disk2", JOB_ARRIVAL_DISK2,
 				 global_time, e.job_ID};
 	event disk2_to_finish = {"Finish in Disk2", JOB_LEAVES_DISK2,
-				 random_gen(values[9],values[8])+global_time,
+				 random_gen(values[11],values[10])+global_time,
 				 e.job_ID};
 
 	push(event_queue.priority_queue, disk2_to_arrive);
 	push(event_queue.priority_queue, disk2_to_finish);
 	disk2->status = DISK2_BUSY;
+	num_jobs_disk2++;
+	
+	float d2_time = disk2_to_finish.timestamp - disk2_to_arrive.timestamp;
 
-
+	sum_disk2_time += d2_time;
+		
 	job_arrive_disk2 = disk2_to_arrive.timestamp;
 	job_finish_disk2 = disk2_to_finish.timestamp;
-   
+	
 
 	
     	 //compare FIFO queue sizes of Disk 1 and Disk 2
 	//if they are equal, choose at random
       }else{
 	if(compare_disk_queue_size(*disk1, *disk2, e) == JOB_ARRIVAL_DISK1){
-	  enqueue(disk1->queue,e.timestamp, e.job_ID);
+	  enqueue(disk1->queue, e.timestamp, e.job_ID);
 
 	  //check for maximum disk queue size
 	  if (disk1->queue->size > MAX_disk1){
@@ -445,8 +467,12 @@ void process_CPU_finish(eq event_queue, event e, CPU *cpu, float *values, disk *
       event to_finish = {"Finish in CPU", JOB_LEAVES_CPU,
 			 random_gen(values[7],values[6])+global_time, task->job_ID};
 
+      sum_cpu_time += to_finish.timestamp - task->timestamp;
+      
       push(event_queue.priority_queue, to_arrive);
       push(event_queue.priority_queue, to_finish);
+
+      num_jobs_cpu++;
       
       cpu->status = CPU_BUSY;
     }
@@ -497,6 +523,11 @@ void process_disk1_finish(eq event_queue, event e, CPU *cpu, float *values, disk
 
       push(event_queue.priority_queue, to_arrive_d1);
       push(event_queue.priority_queue, to_finish_d1);
+
+      sum_disk1_time += to_finish_d1.timestamp - task->timestamp;
+
+      num_jobs_disk1++;
+      
       
       disk1->status = DISK1_BUSY;
     }
@@ -522,6 +553,11 @@ void process_disk2_finish(eq event_queue, event e, CPU *cpu, float *values, disk
 			    random_gen(values[11],values[10])+global_time,
 			    task->job_ID};
 
+      float d2_time =  to_finish_d2.timestamp - task->timestamp;
+      sum_disk2_time += d2_time;
+
+      num_jobs_disk2++;
+      
       push(event_queue.priority_queue, to_arrive_d2);
       push(event_queue.priority_queue, to_finish_d2);
 	

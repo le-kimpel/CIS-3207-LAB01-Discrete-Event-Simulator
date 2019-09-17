@@ -6,8 +6,8 @@ Lab: LAB01
 
 RUNS.txt
 
-To RUN the simulation:
-This program uses a makefile. The command(s) to compile it are:
+To RUN the simulation in Linux:
+This program uses a makefile. The command(s) to compile it are (when in the correct directory):
 
    1)  make
 
@@ -17,6 +17,7 @@ Upon successfully compiling, it should then write to a file, log.txt.
 This program has been tested to run up to 100,000 simulation loops without faltering.
 Thus, the largest FIN_TIME is 100000.
 
+This program was done in Emacs. 
 ----------------------------
 
 Probability of exiting the simulation has been set by default to 20 percent.

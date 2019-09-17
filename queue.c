@@ -4,6 +4,7 @@
 //should make a standard  FIFO queue
 //using a linkedlist
 
+//nodes used for the queue
 typedef struct jobNode{
 
 struct jobNode *next;
@@ -12,13 +13,14 @@ struct jobNode *next;
 
 }job;
 
-
+//the queue structure: one node for the head, and one for the tail
 typedef struct Queue{
   job *head;
   job *tail;
   int size;
 }q;
 
+//function prototypes
 _Bool QisEmpty(q *queue);
 job *new_node();
 void enqueue(q *queue, int timestamp, int job_ID);
@@ -34,6 +36,8 @@ q *queue = (q*)malloc(sizeof(q));
   return queue;
 }
 
+//adds a new node by allocating memory node-by-node
+//this is NOT like the priority queue, which adds twice as much memory
 job *new_node(int timestamp, int job_ID){
   
   job *temp = (job*)malloc(sizeof(job));
@@ -44,6 +48,7 @@ job *new_node(int timestamp, int job_ID){
   
 }
 
+//adds to the end of the linkedlist
 void enqueue(q *queue, int timestamp, int job_ID){
 
   job *temp = new_node(timestamp, job_ID);
@@ -60,6 +65,7 @@ void enqueue(q *queue, int timestamp, int job_ID){
   queue->size++;
 }                                            
 
+//removes from the front end of the linked list
 job *dequeue(q *queue){
  
   if (queue->size == 0){
@@ -73,7 +79,7 @@ job *dequeue(q *queue){
     return temp;
   }
   }
-
+//checks whether the queue has nodes in it
   _Bool QisEmpty(q *queue){
     if (queue->size == 0){
       return 1;

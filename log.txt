@@ -5,7 +5,7 @@ INIT TIME: 0.000000
 FIN TIME: 100.000000
 ARRIVE MIN: 1.000000
 ARRIVE MAX: 10.000000
-QUIT PROBABILITY: 0.000000
+QUIT PROBABILITY: 80.000000
 CPU MIN: 1.000000
 CPU MAX: 2.000000
 DISK1 MIN: 10.000000
@@ -16,102 +16,87 @@ DISK2 MAX: 20.000000
 job0 arrived in simulation at time 0
 job0 arrived in CPU at time 0
 job0 left CPU at time 2
-job0 arrived in Disk1 at time 2
+JOB 0 LEFT THE SIMULATION
 job1 arrived in simulation at time 4
 job1 arrived in CPU at time 4
-job1 left CPU at time 6
-job1 arrived in Disk2 at time 6
+job1 left CPU at time 5
+JOB 1 LEFT THE SIMULATION
 job2 arrived in simulation at time 11
 job2 arrived in CPU at time 11
-job2 left CPU at time 13
-job0 left Disk1 at time 16
-job0 arrived in CPU at time 16
-job0 left CPU at time 17
-job0 arrived in Disk1 at time 17
+job2 left CPU at time 12
+JOB 2 LEFT THE SIMULATION
 job3 arrived in simulation at time 19
 job3 arrived in CPU at time 19
-job3 left CPU at time 20
-job1 left Disk2 at time 23
-job1 arrived in CPU at time 23
-job2 arrived in Disk2 at time 23
-job1 left CPU at time 25
+job3 left CPU at time 21
+JOB 3 LEFT THE SIMULATION
 job4 arrived in simulation at time 25
 job4 arrived in CPU at time 25
-job4 left CPU at time 27
+job4 left CPU at time 26
+JOB 4 LEFT THE SIMULATION
 job5 arrived in simulation at time 29
 job5 arrived in CPU at time 29
 job5 left CPU at time 31
-job0 left Disk1 at time 32
-job0 arrived in CPU at time 32
-job3 arrived in Disk1 at time 32
-job0 left CPU at time 33
+JOB 5 LEFT THE SIMULATION
 job6 arrived in simulation at time 35
 job6 arrived in CPU at time 35
-job6 left CPU at time 37
+job6 left CPU at time 36
+JOB 6 LEFT THE SIMULATION
 job7 arrived in simulation at time 42
 job7 arrived in CPU at time 42
-job2 left Disk2 at time 43
-job1 arrived in Disk2 at time 43
 job7 left CPU at time 44
-job2 arrived in CPU at time 44
-job2 left CPU at time 45
+JOB 7 LEFT THE SIMULATION
 job8 arrived in simulation at time 45
 job8 arrived in CPU at time 45
-job8 left CPU at time 46
-job3 left Disk1 at time 52
-job3 arrived in CPU at time 52
-job4 arrived in Disk1 at time 52
-job3 left CPU at time 54
+job8 left CPU at time 47
+JOB 8 LEFT THE SIMULATION
 job9 arrived in simulation at time 55
 job9 arrived in CPU at time 55
 job10 arrived in simulation at time 57
 job9 left CPU at time 57
+JOB 9 LEFT THE SIMULATION
 job10 arrived in CPU at time 57
-job1 left Disk2 at time 58
-job10 left CPU at time 58
-job5 arrived in Disk2 at time 58
-job1 arrived in CPU at time 58
+job10 left CPU at time 59
+job10 arrived in Disk1 at time 59
 job11 arrived in simulation at time 60
-job1 left CPU at time 60
 job11 arrived in CPU at time 60
-job11 left CPU at time 61
+job11 left CPU at time 62
+job11 arrived in Disk2 at time 62
 job12 arrived in simulation at time 68
 job12 arrived in CPU at time 68
 job13 arrived in simulation at time 69
 job12 left CPU at time 69
+JOB 12 LEFT THE SIMULATION
 job13 arrived in CPU at time 69
 job13 left CPU at time 70
-job4 left Disk1 at time 71
-job4 arrived in CPU at time 71
-job0 arrived in Disk1 at time 71
-job4 left CPU at time 73
-job5 left Disk2 at time 77
-job5 arrived in CPU at time 77
-job6 arrived in Disk2 at time 77
-job5 left CPU at time 79
+JOB 13 LEFT THE SIMULATION
+job11 left Disk2 at time 78
+job11 arrived in CPU at time 78
+job11 left CPU at time 79
+JOB 11 LEFT THE SIMULATION
 job14 arrived in simulation at time 79
+job10 left Disk1 at time 79
 job14 arrived in CPU at time 79
 job14 left CPU at time 80
+JOB 14 LEFT THE SIMULATION
+job10 arrived in CPU at time 80
+job10 left CPU at time 81
+JOB 10 LEFT THE SIMULATION
 job15 arrived in simulation at time 83
 job15 arrived in CPU at time 83
-job15 left CPU at time 85
-job0 left Disk1 at time 88
-job0 arrived in CPU at time 88
-job7 arrived in Disk1 at time 88
+job15 left CPU at time 84
+JOB 15 LEFT THE SIMULATION
 job16 arrived in simulation at time 90
-job0 left CPU at time 90
 job16 arrived in CPU at time 90
 job17 arrived in simulation at time 91
 job16 left CPU at time 92
+JOB 16 LEFT THE SIMULATION
 job17 arrived in CPU at time 92
-job6 left Disk2 at time 94
-job17 left CPU at time 94
-job2 arrived in Disk2 at time 94
-job6 arrived in CPU at time 94
-job6 left CPU at time 96
+job17 left CPU at time 93
+JOB 17 LEFT THE SIMULATION
 job18 arrived in simulation at time 98
 job18 arrived in CPU at time 98
-job18 left CPU at time 99
+job18 left CPU at time 100
+JOB 18 LEFT THE SIMULATION
 Simulation ended
 
 -------------------------------------
@@ -119,19 +104,19 @@ FINISHING STATISTICS:
 -------------------------------------
 Average CPU FIFO queue size: 0.000000
 Maximum CPU FIFO queue size: 0
-Average Disk1 FIFO queue size: 4.647059
-Maximum Disk1 FIFO queue size: 9
-Average Disk2 FIFO queue size: 4.055555
-Maximum Disk2 FIFO queue size: 8
-Throughput CPU: 0.290000
-Throughput Disk1: 0.050000
-Throughput Disk2: 0.050000
-Utilization CPU: 0.470000
-Utilization Disk1: 0.850000
-Utilization Disk2: 1.050000
-Average reponse time CPU: 1.689655
-Average reponse time Disk1: 37.333332
-Average reponse time Disk2: 41.166668
-Maximum response time CPU: 3
-Maximum response time Disk1: 64
-Maximum response time Disk2: 64
+Average Disk1 FIFO queue size: -nan
+Maximum Disk1 FIFO queue size: 0
+Average Disk2 FIFO queue size: -nan
+Maximum Disk2 FIFO queue size: 0
+Throughput CPU: 0.210000
+Throughput Disk1: 0.010000
+Throughput Disk2: 0.010000
+Utilization CPU: 0.310000
+Utilization Disk1: 0.200000
+Utilization Disk2: 0.320000
+Average reponse time CPU: 1.571429
+Average reponse time Disk1: 20.000000
+Average reponse time Disk2: 16.000000
+Maximum response time CPU: 2
+Maximum response time Disk1: 20
+Maximum response time Disk2: 16

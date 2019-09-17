@@ -92,7 +92,7 @@ float completed_jobs_disk1 = 0;
 float completed_jobs_disk2 = 0;
 
 //count for utilization time
-//response time = jComplete - jArrive = cbusy
+//response time = jComplete - jArrive = how long busy
 float job_arrive_cpu = 0;
 float job_finish_cpu = 0;
 float job_arrive_disk1 = 0;
@@ -100,10 +100,12 @@ float job_finish_disk1 = 0;
 float job_arrive_disk2 = 0;
 float job_finish_disk2 = 0;
 
+//flags to check whether a job left the cpu
 int cpu_flag = 0;
 int disk1_flag = 0;
 int disk2_flag = 0;
 
+//tracker variable for arrival times
 int cpu_arrival_time = 0;
 int disk1_arrival_time = 0;
 int disk2_arrival_time = 0;
@@ -120,6 +122,7 @@ int num_jobs_disk2 = 0;
 int MAX_cpu_time = 0;
 int MAX_disk1_time = 0;
 int MAX_disk2_time = 0;
+//END STATISTICS
 
 void main(){
   eq event_queue;
@@ -192,12 +195,16 @@ void handle_sim_arrival(eq event_queue, event e, float *values, CPU *cpu,
 
 }
 
+//actually processes arrivals, or enqueues them fore later
 void process_CPU_enter(eq event_queue, event e, float *values, CPU *cpu,
 		       disk *disk1, disk *disk2){
 
-  
+  //if the CPU is idle
   if (cpu->status == CPU_IDLE){
 
+    //two events are generated with corresponding times
+    //NOTE: values[n] are the values read in from config.txt
+    //e.g., CPU_MIN, CPU_MAX in this case
     event cpu_arrive = {"Arrival in CPU", JOB_ARRIVAL_CPU, e.timestamp, e.job_ID};
     event cpu_finish = {"Finish in CPU", JOB_LEAVES_CPU,
 			random_gen(values[7],values[6])+global_time, e.job_ID};
@@ -206,11 +213,13 @@ void process_CPU_enter(eq event_queue, event e, float *values, CPU *cpu,
     cpu->status = CPU_BUSY;
     sum_cpu_time += cpu_finish.timestamp - cpu_arrive.timestamp;
     num_jobs_cpu++;
-    
+
+    //if the time spent at the CPU is greater than the max cpu busy time
     if (cpu_finish.timestamp-cpu_arrive.timestamp > MAX_cpu_time){
       MAX_cpu_time = cpu_finish.timestamp-cpu_arrive.timestamp;
     }
-    
+
+    //if the CPU is busy
   }else if (cpu->status == CPU_BUSY){
 
     cpu_num_elems+=cpu->queue->size;
@@ -220,6 +229,7 @@ void process_CPU_enter(eq event_queue, event e, float *values, CPU *cpu,
     if (cpu->queue->size > MAX_cpu){
       MAX_cpu = cpu->queue->size;
     }
+    //enqueue the event
     enqueue(cpu->queue, e.timestamp, e.job_ID);
   }else{
     puts("ERROR: event could not be enqueued");
@@ -235,7 +245,8 @@ void handle_event(eq event_queue, float *values, CPU *cpu, disk *disk1, disk *di
    
     //pop the minimum node from the event queue
     event current = pop(event_queue.priority_queue);
-    
+
+    //sets global time to the most recent timestamp
     global_time = current.timestamp;  
     if (current.event_num == 1){
       fprintf(fp,"%s%d%s%d\n", "job", current.job_ID,
@@ -349,24 +360,26 @@ void handle_event(eq event_queue, float *values, CPU *cpu, disk *disk1, disk *di
       fprintf(fp, "%s%d\n", "Maximum response time CPU: ", MAX_cpu_time);
       fprintf(fp, "%s%d\n", "Maximum response time Disk1: ", MAX_disk1_time);
       fprintf(fp, "%s%d\n", "Maximum response time Disk2: ", MAX_disk2_time);
-          
+
+      printf("%s\n", "Simulation complete.");
       fclose(fp);
       exit(0);
     }
-   
+
+    //switch statement that acts as a controller for all event types
     switch (current.event_num){
-    case 1:
+    case 1: //arrivals into the simulation: deals also with arrivals in CPU
       handle_sim_arrival(event_queue, current, values,cpu, disk1, disk2);
       break;
-    case 3 :
+    case 3 : //finishes in CPU: deals also with exit probability and disk1, disk2 arrivals
       process_CPU_finish(event_queue, current, cpu, values, disk1, disk2,
 			 DISK_PROB); 
       break;
-    case 5:
+    case 5: //finishes in Disk1: deals also with reentry into CPU
        process_disk1_finish(event_queue, current, cpu, values, disk1,
 			    disk2);
        break;
-    case 7:
+    case 7: //finishes in Disk2: deals also with reentry into CPU
       process_disk2_finish(event_queue, current, cpu, values, disk1,
 			     disk2);
 	break;
@@ -397,6 +410,7 @@ void process_CPU_finish(eq event_queue, event e, CPU *cpu, float *values, disk *
       
       if (disk1->status == DISK1_IDLE){
 	//send directly to disk1
+	//generate corresponding events
 	event disk1_to_arrive = {"Arrival in Disk1", JOB_ARRIVAL_DISK1,
 				 global_time, e.job_ID};
         event disk1_to_finish = {"Finish in Disk1", JOB_LEAVES_DISK1,
@@ -415,7 +429,7 @@ void process_CPU_finish(eq event_queue, event e, CPU *cpu, float *values, disk *
    	
       }else if (disk2->status == DISK2_IDLE){
 	//send directly to disk2
-
+	//generate corresponding events
 	event disk2_to_arrive = {"Arrival in Disk2", JOB_ARRIVAL_DISK2,
 				 global_time, e.job_ID};
 	event disk2_to_finish = {"Finish in Disk2", JOB_LEAVES_DISK2,
@@ -426,7 +440,8 @@ void process_CPU_finish(eq event_queue, event e, CPU *cpu, float *values, disk *
 	push(event_queue.priority_queue, disk2_to_finish);
 	disk2->status = DISK2_BUSY;
 	num_jobs_disk2++;
-	
+
+	//time spent at disk2
 	float d2_time = disk2_to_finish.timestamp - disk2_to_arrive.timestamp;
 
 	sum_disk2_time += d2_time;
@@ -476,7 +491,8 @@ void process_CPU_finish(eq event_queue, event e, CPU *cpu, float *values, disk *
 
       cpu_num_elems += cpu->queue->size;
       cpu_num_adds += 1;
-      
+
+      //generate corresponding events
       event to_arrive = {"Arrive in CPU", JOB_ARRIVAL_CPU, global_time,
 			 task->job_ID};
       event to_finish = {"Finish in CPU", JOB_LEAVES_CPU,
@@ -493,7 +509,7 @@ void process_CPU_finish(eq event_queue, event e, CPU *cpu, float *values, disk *
       if (to_finish.timestamp-task->timestamp > MAX_cpu_time){
 	MAX_cpu_time = to_finish.timestamp-task->timestamp;
       }
-  
+      //set the CPU to busy, as we just dequeued an event directly into CPU
       cpu->status = CPU_BUSY;
     }
 }
@@ -555,7 +571,7 @@ void process_disk1_finish(eq event_queue, event e, CPU *cpu, float *values, disk
   
 
       
-      
+      //set Disk1 to busy, as we immediately dispensed an event into disk1
       disk1->status = DISK1_BUSY;
     }
   }
@@ -593,7 +609,8 @@ void process_disk2_finish(eq event_queue, event e, CPU *cpu, float *values, disk
       
       push(event_queue.priority_queue, to_arrive_d2);
       push(event_queue.priority_queue, to_finish_d2);
-	
+
+      //set disk2 to busy, as we immediately dispensed an event into disk2
       disk2->status = DISK2_BUSY;
     }
     

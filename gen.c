@@ -7,14 +7,16 @@
 int random_gen(int max, int min);
 _Bool prob_select(float percentage);
 
-int random_gen(int max, int min){
-
-  
+//uses the random generator equation from lab documentation
+int random_gen(int max, int min){  
   return rand()%(max-min+1)+min;
 }
 
   
 //probability selector
+//finds a random between max, min.
+//RETURN 1 means job LEAVES cpu
+//RETURN 0 means job REMAINS in the simulation
 _Bool prob_select(float percentage){
   if (percentage < 0 || percentage > 100){
     return 0;

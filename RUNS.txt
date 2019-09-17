@@ -17,8 +17,20 @@ Upon successfully compiling, it should then write to a file, log.txt.
 This program has been tested to run up to 100,000 simulation loops without faltering.
 Thus, the largest FIN_TIME is 100000.
 
-I cycled between small variables when debugging for critical errors,
-particularly within the heap. This helped to narrow down the number of elements I was examining.
+----------------------------
+
+Probability of exiting the simulation has been set by default to 20 percent.
+For jobs to constantly exit the simulation, probability must be set to a
+higher percentage. Conversely, lower probability (say, 3-4 percent) should reduce
+the number of jobs that choose to exit, though poor randomness dictates some jobs
+are fated to leave more than others.
+
+The choice as to whether a disk leaves the simulation is made in both "gen.c"
+and "main.c", in the process_cpu_finish() function. The function calls
+another function, compare_disk_queue_size(), which makes a comparison between
+disks. Generally it harbors a slight bias toward Disk1 since that criteria is checked
+first.
+I cycled between small variables when debugging for critical errors, particularly within the heap. This helped to narrow down the number of elements I was examining.
 Typically, the values were as follows:
 
 INIT TIME 0
@@ -42,7 +54,7 @@ DISK1_MAX 20
 DISK2_MIN 10
 DISK2_MAX 20
 
-The CPU min and max, at these specifications, guaraxntee that jobs are flying in and out of the
+The CPU min and max, at these specifications, guarentee that jobs are flying in and out of the
 CPU much more rapidly than in the disk - which is accurate to real disk performance, which is
 much slower.
 Additionally, negative values cannot be read.

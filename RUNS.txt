@@ -1,0 +1,86 @@
+----------------------------
+NAME: Lauren Kimpel
+tuID: tug60017@temple.edu
+Lab: LAB01
+---------------------------
+
+RUNS.txt
+
+To RUN the simulation:
+This program uses a makefile. The command(s) to compile it are:
+
+   1)  make
+
+   2)  ./sim
+
+Upon successfully compiling, it should then write to a file, log.txt.
+This program has been tested to run up to 100,000 simulation loops without faltering.
+Thus, the largest FIN_TIME is 100000.
+
+I cycled between small variables when debugging for critical errors,
+particularly within the heap. This helped to narrow down the number of elements I was examining.
+Typically, the values were as follows:
+
+INIT TIME 0
+FIN TIME 50 (sometimes 25)
+
+with a spread-out distance between CPU MIN/MAX and DISK1, DISK2 MIN/MAX, usually no more than
+10 simulation ms.
+
+The default probability for exiting the simulation is 20%. Default values are:
+
+SEED 0
+INIT_TIME 0
+FIN_TIME 100
+ARRIVE_MIN 1
+ARRIVE_MAX 10
+QUIT_PROB 20
+CPU_MIN 1
+CPU_MAX 2
+DISK1_MIN 10
+DISK1_MAX 20
+DISK2_MIN 10
+DISK2_MAX 20
+
+The CPU min and max, at these specifications, guaraxntee that jobs are flying in and out of the
+CPU much more rapidly than in the disk - which is accurate to real disk performance, which is
+much slower.
+Additionally, negative values cannot be read.
+
+For the default statistics, the average CPU FIFO queue size is 0. This makes sense
+given that no job ever stays at the CPU because the interarrival times are so small. There is only
+ever a maximum of one other job in the CPU's queue. Much of that responsibility belongs to the
+disks, which have exactly similar FIFO queue sizes no matter what the settings.
+
+Because the CPU has such a short interarrival span, the average resonse time is much lower than
+that of the Disks, which, again, models what occurs on actual disks.
+In this specific run:
+
+Average response time Disk1 = 31.16666
+Average response time Disk2 = 31.28572
+
+However:
+
+Average response time CPU = 1.86667.
+
+I learned about how each component is affected when other components are backlogged.
+This explains why scheduling algorithms are deeply rooted in "extreme" scenarios -
+they are predictable until one queue has significantly more jobs in it than another.
+A job leave probability of 100 was also used to test the legitimacy of the heap.
+Not surprisingly, no disks are ever serviced in this case.
+But a probability of 0 means that no job ever leaves, and every job is forced to cycle into a
+disk, making the disks work slightly harder.
+
+----------------------------------------
+CONCLUSION
+----------------------------------------
+In this lab, I learned a lot about debugging. It is very easy to cave into the delusion that
+foundational structures consistently work. However, I learned that debugging requires a meticulous
+glimpse into planning. By choosing "edge-case" values, like smaller inter-arrival times or
+ridiculous finishing times, I could reveal critical logic errors in the program that would
+not be present had I not tested for different things.
+Whitespace and code organization were also important when testing. Naming conventions for variables
+become redundant; by not having enough comments, or by having too much code condensed into blocks,
+it is difficult to debug and track what is going on in massive project files.
+
+

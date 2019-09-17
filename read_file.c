@@ -26,9 +26,15 @@ while(fgets(buffer, sizeof(buffer), fp) != NULL){
 
       if(sscanf(buffer, search, &vals[count]) != 0){
       
-	count++;
-      }
+	if (vals[count] < -.01){
+	  puts("ERROR: cannot have negative values in config");
+	  exit(0);
+	}
 
+	count++;
+
+      }
+      
       
 
     }
